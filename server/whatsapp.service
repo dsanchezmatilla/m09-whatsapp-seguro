@@ -14,7 +14,10 @@ After=network.target
 User=usuario
 WorkingDirectory=/home/usuario/m09-whatsapp-seguro/server
 ExecStart=/usr/bin/node server.js
-Environment=PORT=8080
+# Puerto 80: el Proxmox del instituto lo publica fuera como HTTPS (wss://)
+Environment=PORT=80
+# Permite usar el puerto 80 sin ejecutar node como root
+AmbientCapabilities=CAP_NET_BIND_SERVICE
 Restart=always
 
 [Install]

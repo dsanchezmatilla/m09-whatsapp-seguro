@@ -50,6 +50,9 @@ journalctl -u whatsapp -f      # ver logs
 
 Para actualizar: `git pull && sudo systemctl restart whatsapp`.
 
+En el Proxmox el servicio escucha en el puerto 80, que el instituto publica hacia fuera por HTTPS.
+Por eso desde fuera la app se conecta con `wss://` (WebSocket cifrado con TLS).
+
 ## Ejecutar la app
 
 ```bash

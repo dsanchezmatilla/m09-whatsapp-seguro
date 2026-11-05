@@ -29,7 +29,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final nombre = TextEditingController();
-  final servidor = TextEditingController(text: 'ws://localhost:8080');
+  final servidor = TextEditingController(text: 'wss://dsanchezmatilla.ieti.site');
   String? error;
 
   Future<void> entrar() async {

@@ -1,0 +1,7 @@
+node_modules/
+# Flutter
+app/.dart_tool/
+app/build/
+app/.flutter-plugins*
+app/.idea/
+*.iml

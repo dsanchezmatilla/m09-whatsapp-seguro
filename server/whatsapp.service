@@ -1,0 +1,21 @@
+# Servicio systemd para el Proxmox.
+# Instalación:
+#   sudo cp whatsapp.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now whatsapp
+# Ver logs:  journalctl -u whatsapp -f
+# Ajustar User, WorkingDirectory y la ruta de node a tu máquina (`which node`).
+
+[Unit]
+Description=Servidor WhatsApp seguro (WebSocket)
+After=network.target
+
+[Service]
+User=usuario
+WorkingDirectory=/home/usuario/m09-whatsapp-seguro/server
+ExecStart=/usr/bin/node server.js
+Environment=PORT=8080
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

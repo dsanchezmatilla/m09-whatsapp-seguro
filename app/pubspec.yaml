@@ -1,0 +1,23 @@
+name: whatsapp_seguro
+description: Chat con cifrado de extremo a extremo (estilo WhatsApp).
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cryptography: ^2.7.0        # X25519 + AES-GCM
+  web_socket_channel: ^3.0.0  # conexión WebSocket con el servidor
+  path_provider: ^2.1.0       # carpeta donde guardar claves e historial
+  file_picker: ^13.3.2        # elegir imágenes (Linux y Android)
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

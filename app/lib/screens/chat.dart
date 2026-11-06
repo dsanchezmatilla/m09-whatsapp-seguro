@@ -32,15 +32,26 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> enviarImagen() async {
     if (!puedoEnviar) return;
-    final fichero = await FilePicker.pickFile(type: FileType.image);
+    final PlatformFile? fichero;
+    try {
+      fichero = await FilePicker.pickFile(type: FileType.image);
+    } catch (e) {
+      // En Linux el selector usa el portal de escritorio (xdg-desktop-portal)
+      avisar('No se ha podido abrir el selector de imágenes');
+      return;
+    }
     if (fichero == null) return; // el usuario ha cancelado
     final bytes = await fichero.readAsBytes();
     if (bytes.length > 5 * 1024 * 1024) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Imagen demasiado grande (máx. 5 MB)')));
+      avisar('Imagen demasiado grande (máx. 5 MB)');
       return;
     }
     chat.enviarImagen(widget.otro, bytes);
+  }
+
+  void avisar(String texto) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
   @override

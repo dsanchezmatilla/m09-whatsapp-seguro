@@ -32,6 +32,7 @@ class Mensaje {
 class ChatService extends ChangeNotifier {
   late String yo;
   late SimpleKeyPair claves;
+  late String privada; // la clave privada en base64, tal como se guarda en el fichero
   late File fichero; // claves + historial de este usuario
   WebSocketChannel? canal;
 
@@ -57,14 +58,16 @@ class ChatService extends ChangeNotifier {
     if (fichero.existsSync()) {
       // Ya teníamos claves e historial
       final datos = jsonDecode(fichero.readAsStringSync());
-      claves = await cargarClaves(datos['privada']);
+      privada = datos['privada'];
+      claves = await cargarClaves(privada);
       (datos['chats'] as Map).forEach((usuario, lista) {
         chats[usuario] = [for (final m in lista) Mensaje.fromJson(m)];
       });
     } else {
       // Primera vez: generamos el par de claves automáticamente
       claves = await generarClaves();
-      await _guardar();
+      privada = await clavePrivada(claves);
+      _guardar();
     }
 
     canal = WebSocketChannel.connect(Uri.parse(url));
@@ -73,12 +76,14 @@ class ChatService extends ChangeNotifier {
     _enviar({'type': 'login', 'user': yo, 'publicKey': await clavePublica(claves)});
   }
 
-  Future<void> _guardar() async {
+  // Escritura síncrona a propósito: así dos guardados seguidos nunca se mezclan
+  // en el fichero (con la versión async podían solaparse y dejarlo corrupto).
+  void _guardar() {
     final datos = {
-      'privada': await clavePrivada(claves),
+      'privada': privada,
       'chats': chats.map((usuario, lista) => MapEntry(usuario, [for (final m in lista) m.toJson()])),
     };
-    await fichero.writeAsString(jsonEncode(datos));
+    fichero.writeAsStringSync(jsonEncode(datos));
   }
 
   void _enviar(Map data) => canal!.sink.add(jsonEncode(data));
@@ -101,7 +106,7 @@ class ChatService extends ChangeNotifier {
     final cifrado = await cifrar(datos, claves, publicas[para]!);
     _enviar({'type': 'msg', 'to': para, 'id': id, 'kind': tipo, ...cifrado});
     chat(para).add(Mensaje(id, true, tipo, contenido, _hora(), 'enviado'));
-    await _guardar();
+    _guardar();
     notifyListeners();
   }
 
@@ -158,7 +163,7 @@ class ChatService extends ChangeNotifier {
           escribiendo.remove(de)?.cancel();
           _enviar({'type': 'delivered', 'to': de, 'id': data['id']});
           if (chatAbierto == de) marcarLeidos(de);
-          await _guardar();
+          _guardar();
         } catch (e) {
           debugPrint('No se ha podido descifrar el mensaje de $de: $e');
         }

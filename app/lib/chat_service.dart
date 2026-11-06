@@ -18,15 +18,23 @@ class Mensaje {
   final bool mio;
   final String tipo; // 'text' o 'image'
   final String contenido; // el texto, o la imagen en base64
+  // Imagen decodificada una sola vez (la primera vez que se pinta) y reutilizada:
+  // si se decodificase en cada redibujado, Flutter la recargaría y parpadearía.
+  late final Uint8List bytes = base64Decode(contenido);
   final String hora;
+  final int fecha; // milisegundos desde 1970: sirve para ordenar los chats
   String estado; // 'enviado', 'recibido' o 'leido'
 
-  Mensaje(this.id, this.mio, this.tipo, this.contenido, this.hora, this.estado);
+  // Si no se indica la fecha, es la de ahora (mensaje nuevo)
+  Mensaje(this.id, this.mio, this.tipo, this.contenido, this.hora, this.estado, [int? fecha])
+      : fecha = fecha ?? DateTime.now().millisecondsSinceEpoch;
 
-  Map toJson() => {'id': id, 'mio': mio, 'tipo': tipo, 'contenido': contenido, 'hora': hora, 'estado': estado};
+  Map toJson() =>
+      {'id': id, 'mio': mio, 'tipo': tipo, 'contenido': contenido, 'hora': hora, 'estado': estado, 'fecha': fecha};
 
+  // Los mensajes guardados antes de existir 'fecha' toman 0 (quedan al final)
   factory Mensaje.fromJson(Map j) =>
-      Mensaje(j['id'], j['mio'], j['tipo'], j['contenido'], j['hora'], j['estado']);
+      Mensaje(j['id'], j['mio'], j['tipo'], j['contenido'], j['hora'], j['estado'], j['fecha'] ?? 0);
 }
 
 class ChatService extends ChangeNotifier {
@@ -46,7 +54,18 @@ class ChatService extends ChangeNotifier {
   DateTime _ultimoAviso = DateTime(2000);
 
   // Todos los contactos: los que ve el servidor y los que tienen historial
-  List<String> get contactos => {...publicas.keys, ...chats.keys}.toList()..sort();
+  // Ordenados como en WhatsApp: primero el chat con el mensaje más reciente;
+  // los que no tienen mensajes, al final y por orden alfabético
+  List<String> get contactos {
+    final lista = {...publicas.keys, ...chats.keys}.toList();
+    lista.sort((a, b) {
+      final porFecha = _ultimaFecha(b).compareTo(_ultimaFecha(a));
+      return porFecha != 0 ? porFecha : a.compareTo(b);
+    });
+    return lista;
+  }
+
+  int _ultimaFecha(String usuario) => chat(usuario).isEmpty ? 0 : chat(usuario).last.fecha;
 
   List<Mensaje> chat(String usuario) => chats.putIfAbsent(usuario, () => []);
 

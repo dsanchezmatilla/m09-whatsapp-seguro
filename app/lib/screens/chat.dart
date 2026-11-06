@@ -1,7 +1,5 @@
 // Conversación con un usuario: burbujas, ticks de estado, "escribiendo..." y envío.
 
-import 'dart:convert';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -98,7 +96,7 @@ class _ChatScreenState extends State<ChatScreen> {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-          m.tipo == 'image' ? Image.memory(base64Decode(m.contenido)) : Text(m.contenido),
+          m.tipo == 'image' ? Image.memory(m.bytes, gaplessPlayback: true) : Text(m.contenido),
           Row(mainAxisSize: MainAxisSize.min, children: [
             Text(m.hora, style: const TextStyle(fontSize: 11, color: Colors.grey)),
             if (m.mio) _tick(m.estado),

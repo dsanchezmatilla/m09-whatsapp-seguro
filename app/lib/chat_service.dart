@@ -34,7 +34,9 @@ class ChatService extends ChangeNotifier {
   late SimpleKeyPair claves;
   late String privada; // la clave privada en base64, tal como se guarda en el fichero
   late File fichero; // claves + historial de este usuario
+  late String url; // servidor, para poder reconectar
   WebSocketChannel? canal;
+  bool conectado = false;
 
   final publicas = <String, String>{}; // usuario -> clave pública
   final online = <String>{};
@@ -52,6 +54,7 @@ class ChatService extends ChangeNotifier {
 
   Future<void> conectar(String nombre, String url) async {
     yo = nombre;
+    this.url = url;
     final dir = await getApplicationSupportDirectory();
     fichero = File('${dir.path}/whatsapp_$nombre.json');
 
@@ -70,10 +73,30 @@ class ChatService extends ChangeNotifier {
       _guardar();
     }
 
+    await _abrirConexion(); // si falla, el error llega a la pantalla de login
+  }
+
+  Future<void> _abrirConexion() async {
     canal = WebSocketChannel.connect(Uri.parse(url));
     await canal!.ready;
-    canal!.stream.listen(_recibir);
+    canal!.stream.listen(_recibir, onDone: _conexionPerdida, onError: (_) {});
     _enviar({'type': 'login', 'user': yo, 'publicKey': await clavePublica(claves)});
+    conectado = true;
+    notifyListeners();
+  }
+
+  // Se ha cortado la conexión (sin red, móvil dormido, proxy...): reintentamos cada 3 s
+  void _conexionPerdida() {
+    conectado = false;
+    online.clear();
+    notifyListeners();
+    Timer(const Duration(seconds: 3), () async {
+      try {
+        await _abrirConexion();
+      } catch (_) {
+        _conexionPerdida();
+      }
+    });
   }
 
   // Escritura síncrona a propósito: así dos guardados seguidos nunca se mezclan

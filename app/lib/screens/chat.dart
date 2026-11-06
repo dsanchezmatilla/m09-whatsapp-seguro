@@ -21,8 +21,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   ChatService get chat => widget.chat;
 
-  // Sin clave pública no podemos cifrar (el otro aún no se ha conectado nunca)
-  bool get puedoEnviar => chat.publicas.containsKey(widget.otro);
+  // Hace falta conexión y la clave pública del otro (sin ella no podemos cifrar)
+  bool get puedoEnviar => chat.conectado && chat.publicas.containsKey(widget.otro);
 
   void enviarTexto() {
     if (texto.text.trim().isEmpty || !puedoEnviar) return;

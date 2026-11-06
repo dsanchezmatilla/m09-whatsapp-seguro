@@ -18,7 +18,7 @@ class HomeScreen extends StatelessWidget {
       builder: (context, _) => LayoutBuilder(builder: (context, medidas) {
         final ancha = medidas.maxWidth > 700;
         final lista = Scaffold(
-          appBar: AppBar(title: Text('Chats de ${chat.yo}')),
+          appBar: AppBar(title: Text(chat.conectado ? 'Chats de ${chat.yo}' : 'Reconectando...')),
           body: ListView(children: [for (final c in chat.contactos) _contacto(context, c, ancha)]),
         );
 

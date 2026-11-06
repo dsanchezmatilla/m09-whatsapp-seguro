@@ -42,6 +42,8 @@ function forward(data) {
 
 wss.on('connection', (socket) => {
   let me = null; // nombre del usuario de esta conexión
+  socket.vivo = true;
+  socket.on('pong', () => (socket.vivo = true)); // el cliente responde a nuestro ping
 
   socket.on('message', (raw) => {
     let data;
@@ -80,5 +82,20 @@ wss.on('connection', (socket) => {
     }
   });
 });
+
+// Latido cada 25 s: mandamos un ping a cada cliente.
+// - Si no respondió al ping anterior, la conexión está muerta: la cerramos
+//   (eso lanza 'close', que lo marca desconectado y sus mensajes van a "pending").
+// - El tráfico del ping evita que el proxy HTTPS corte las conexiones inactivas (~50 s).
+setInterval(() => {
+  for (const socket of wss.clients) {
+    if (!socket.vivo) {
+      socket.terminate();
+      continue;
+    }
+    socket.vivo = false;
+    socket.ping();
+  }
+}, 25000);
 
 console.log(`Servidor escuchando en ws://0.0.0.0:${PORT}`);

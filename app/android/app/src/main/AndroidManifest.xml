@@ -1,11 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Necesario para conectarse al servidor WebSocket -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- allowBackup="false": la clave privada no debe copiarse a la nube (copia automática de Android) -->
     <application
         android:label="WhatsApp seguro"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="true"
+        android:allowBackup="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"
